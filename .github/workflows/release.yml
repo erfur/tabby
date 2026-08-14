@@ -29,14 +29,22 @@ jobs:
       run: npm ci --include=dev
     - name: Build Firefox extension
       run: npm run build:firefox
-    - name: Package Firefox extension
+    - name: Package source code
+      run: git archive --format=zip --output="tabby-next-${VERSION}.source.zip" HEAD
+    - name: Sign Firefox extension
+      env:
+        WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+        WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
       run: |
-        npx --yes web-ext@10.6.0 build \
+        npx --yes web-ext@10.6.0 sign \
           --source-dir dist \
           --artifacts-dir web-ext-artifacts \
-          --filename "tabby-${VERSION}.firefox.zip" \
-          --overwrite-dest
-    - name: Publish package
+          --channel unlisted \
+          --upload-source-code "tabby-next-${VERSION}.source.zip"
+        signed_packages=(web-ext-artifacts/*.xpi)
+        test "${#signed_packages[@]}" -eq 1
+        mv "${signed_packages[0]}" "tabby-next-${VERSION}.firefox.xpi"
+    - name: Publish signed package
       env:
         GH_TOKEN: ${{ github.token }}
-      run: gh release upload "${GITHUB_REF_NAME}" "web-ext-artifacts/tabby-${VERSION}.firefox.zip" --clobber
+      run: gh release upload "${GITHUB_REF_NAME}" "tabby-next-${VERSION}.firefox.xpi" --clobber
