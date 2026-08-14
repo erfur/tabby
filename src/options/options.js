@@ -6,7 +6,7 @@ import { EXT_VERSION } from "../../ext-info"
 import { resolveDefault } from "./exports"
 
 // Fill version
-document.querySelector("#version").innerText = `Tabby ${EXT_VERSION}`;
+document.querySelector("#version").innerText = `Tabby Next ${EXT_VERSION}`;
 
 //option:popup-size
 $local$.fulfill("option:popup-size", (popupSize) => {
@@ -218,4 +218,3 @@ $local$.fulfill("option:separate-save", (separateSave) => {
     // Set current values
     separateSaveSwitch.checked = separateSave;
 }, resolveDefault("option:separate-save"));
-

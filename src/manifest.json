@@ -1,7 +1,7 @@
 {
 
     "manifest_version": 3,
-    "name": "Tabby - Window and Tab Manager",
+    "name": "Tabby Next - Window and Tab Manager",
     "version": "<this will be filled in when `gen-manifest` gets run>",
 
     "description": "Manage great amounts of windows and tabs at ease.",
@@ -38,12 +38,12 @@
     ],
     "action": {
         "default_icon": "icons/tabby-32.png",
-        "default_title": "Tabby",
+        "default_title": "Tabby Next",
         "default_popup": "popup/index.html"
     },
     "sidebar_action": {
         "default_icon": "icons/tabby-32.png",
-        "default_title": "Tabby",
+        "default_title": "Tabby Next",
         "default_panel": "popup/sidebar.html",
         "browser_style": false,
         "open_at_install": false
@@ -59,14 +59,14 @@
                 "default": "Ctrl+Shift+Space",
                 "mac": "MacCtrl+Shift+Space"
             },
-            "description": "Open Tabby, with focus on the search bar"
+            "description": "Open Tabby Next, with focus on the search bar"
         },
         "open-tabby-focus-current": {
             "suggested_key": {
                 "default": "Alt+Period",
                 "mac": "Alt+Period"
             },
-            "description": "Open Tabby, with focus on the current tab"
+            "description": "Open Tabby Next, with focus on the current tab"
         },
         "open-tabby-switch-view": {
             "suggested_key": {

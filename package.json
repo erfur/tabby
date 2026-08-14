@@ -1,7 +1,7 @@
 {
-    "name": "tabby",
+    "name": "tabby-next",
     "version": "3.2.3",
-    "description": "Tabby is an open-source window & tab manager that can manage great amounts of windows and tabs at ease.",
+    "description": "Tabby Next is an open-source window and tab manager.",
     "private": true,
     "scripts": {
         "build:cartographer": "cd cartographer && wasm-pack build && cd ..",
@@ -24,14 +24,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Bill13579/tabby.git"
+        "url": "git+https://github.com/erfur/tabby.git"
     },
     "author": "BillK <bluesky42624@gmail.com>",
     "license": "MPL-2.0",
     "bugs": {
-        "url": "https://github.com/Bill13579/tabby/issues"
+        "url": "https://github.com/erfur/tabby/issues"
     },
-    "homepage": "https://github.com/Bill13579/tabby#readme",
+    "homepage": "https://github.com/erfur/tabby#readme",
     "devDependencies": {
         "circular-dependency-plugin": "^5.2.2",
         "eslint": "^8.34.0",
@@ -47,6 +47,6 @@
         "marked": "^4.2.12",
         "proxy-polyfill": "^0.3.2",
         "smoothscroll-polyfill": "^0.4.4",
-        "tabby": "file:"
+        "tabby-next": "file:"
     }
 }
