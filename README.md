@@ -63,7 +63,7 @@ This will install Tabby as a temporary add-on, so you will need to re-do this ev
 
 ## Publishing Releases
 
-Publishing a GitHub release whose tag matches `v<EXT_VERSION>` builds the Firefox extension, signs it through Mozilla's unlisted AMO channel, and attaches the signed XPI to the release. The repository must define `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` secrets containing AMO API credentials.
+Publishing a GitHub release whose tag matches `v<EXT_VERSION>` builds the Firefox extension and attaches an unsigned ZIP package to the release.
 
 ## Editing & Testing
 
