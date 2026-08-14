@@ -12,7 +12,7 @@ switch (process.argv[2]) {
     case "firefox":
         manifest.browser_specific_settings = {
             gecko: {
-                id: "tabby@erfur.dev",
+                id: "tabby-next@erfur.dev",
                 strict_min_version: "59.0"
             }
         };
