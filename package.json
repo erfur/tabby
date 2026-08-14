@@ -1,6 +1,6 @@
 {
     "name": "tabby-next",
-    "version": "3.3.0",
+    "version": "3.3.1",
     "description": "Tabby Next is an open-source window and tab manager.",
     "private": true,
     "scripts": {
