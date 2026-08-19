@@ -76,7 +76,6 @@ jobs:
         const version = require('./amo-version.json')
         const reusable = version.channel === 'unlisted'
             && version.is_disabled !== true
-            && version.file?.is_mozilla_signed_extension === true
             && version.file?.status === 'public'
             && version.file?.url
         process.exit(reusable ? 0 : 1)
@@ -87,8 +86,12 @@ jobs:
           fi
 
           DOWNLOAD_URL="$(node -p "require('./amo-version.json').file.url")"
-          curl --fail --location --output "tabby-next-${VERSION}.firefox.xpi" "${DOWNLOAD_URL}"
+          curl --fail --location \
+            --header "Authorization: JWT ${JWT}" \
+            --output "tabby-next-${VERSION}.firefox.xpi" \
+            "${DOWNLOAD_URL}"
         fi
+        unzip -t "tabby-next-${VERSION}.firefox.xpi" META-INF/mozilla.rsa
     - name: Publish signed package
       env:
         GH_TOKEN: ${{ github.token }}
