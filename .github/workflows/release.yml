@@ -36,8 +36,18 @@ jobs:
         WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
         WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
       run: |
-        ADDON_ID="$(node -p "require('./dist/manifest.json').browser_specific_settings.gecko.id")"
-        JWT="$(node <<'NODE'
+        if npx --yes web-ext@10.6.0 sign \
+          --source-dir dist \
+          --artifacts-dir web-ext-artifacts \
+          --channel unlisted \
+          --upload-source-code "tabby-next-${VERSION}.source.zip"; then
+          signed_packages=(web-ext-artifacts/*.xpi)
+          test "${#signed_packages[@]}" -eq 1
+          mv "${signed_packages[0]}" "tabby-next-${VERSION}.firefox.xpi"
+        else
+          SIGN_STATUS=$?
+          ADDON_ID="$(node -p "require('./dist/manifest.json').browser_specific_settings.gecko.id")"
+          JWT="$(node <<'NODE'
         const crypto = require('crypto')
         const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url')
         const issuedAt = Math.floor(Date.now() / 1000)
@@ -54,29 +64,29 @@ jobs:
             .digest('base64url')
         process.stdout.write(`${unsignedToken}.${signature}`)
         NODE
-        )"
-        VERSION_URL="https://addons.mozilla.org/api/v5/addons/addon/${ADDON_ID}/versions/${VERSION}/"
-        HTTP_STATUS="$(curl --silent --show-error \
-          --header "Authorization: JWT ${JWT}" \
-          --output amo-version.json \
-          --write-out "%{http_code}" \
-          "${VERSION_URL}")"
+          )"
+          VERSION_URL="https://addons.mozilla.org/api/v5/addons/addon/${ADDON_ID}/versions/v${VERSION}/"
+          HTTP_STATUS="$(curl --silent --show-error \
+            --header "Authorization: JWT ${JWT}" \
+            --output amo-version.json \
+            --write-out "%{http_code}" \
+            "${VERSION_URL}")"
 
-        if test "${HTTP_STATUS}" = 200; then
+          if test "${HTTP_STATUS}" != 200 || ! node <<'NODE'
+        const version = require('./amo-version.json')
+        const reusable = version.channel === 'unlisted'
+            && version.is_disabled !== true
+            && version.file?.is_mozilla_signed_extension === true
+            && version.file?.url
+        process.exit(reusable ? 0 : 1)
+        NODE
+          then
+            cat amo-version.json
+            exit "${SIGN_STATUS}"
+          fi
+
           DOWNLOAD_URL="$(node -p "require('./amo-version.json').file.url")"
           curl --fail --location --output "tabby-next-${VERSION}.firefox.xpi" "${DOWNLOAD_URL}"
-        elif test "${HTTP_STATUS}" = 404; then
-          npx --yes web-ext@10.6.0 sign \
-            --source-dir dist \
-            --artifacts-dir web-ext-artifacts \
-            --channel unlisted \
-            --upload-source-code "tabby-next-${VERSION}.source.zip"
-          signed_packages=(web-ext-artifacts/*.xpi)
-          test "${#signed_packages[@]}" -eq 1
-          mv "${signed_packages[0]}" "tabby-next-${VERSION}.firefox.xpi"
-        else
-          cat amo-version.json
-          exit 1
         fi
     - name: Publish signed package
       env:
