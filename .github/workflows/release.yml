@@ -31,19 +31,53 @@ jobs:
       run: npm run build:firefox
     - name: Package source code
       run: git archive --format=zip --output="tabby-next-${VERSION}.source.zip" HEAD
-    - name: Sign Firefox extension
+    - name: Sign or retrieve Firefox extension
       env:
         WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
         WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
       run: |
-        npx --yes web-ext@10.6.0 sign \
-          --source-dir dist \
-          --artifacts-dir web-ext-artifacts \
-          --channel unlisted \
-          --upload-source-code "tabby-next-${VERSION}.source.zip"
-        signed_packages=(web-ext-artifacts/*.xpi)
-        test "${#signed_packages[@]}" -eq 1
-        mv "${signed_packages[0]}" "tabby-next-${VERSION}.firefox.xpi"
+        ADDON_ID="$(node -p "require('./dist/manifest.json').browser_specific_settings.gecko.id")"
+        JWT="$(node <<'NODE'
+        const crypto = require('crypto')
+        const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url')
+        const issuedAt = Math.floor(Date.now() / 1000)
+        const header = encode({ alg: 'HS256', typ: 'JWT' })
+        const payload = encode({
+            iss: process.env.WEB_EXT_API_KEY,
+            jti: crypto.randomUUID(),
+            iat: issuedAt,
+            exp: issuedAt + 60,
+        })
+        const unsignedToken = `${header}.${payload}`
+        const signature = crypto.createHmac('sha256', process.env.WEB_EXT_API_SECRET)
+            .update(unsignedToken)
+            .digest('base64url')
+        process.stdout.write(`${unsignedToken}.${signature}`)
+        NODE
+        )"
+        VERSION_URL="https://addons.mozilla.org/api/v5/addons/addon/${ADDON_ID}/versions/${VERSION}/"
+        HTTP_STATUS="$(curl --silent --show-error \
+          --header "Authorization: JWT ${JWT}" \
+          --output amo-version.json \
+          --write-out "%{http_code}" \
+          "${VERSION_URL}")"
+
+        if test "${HTTP_STATUS}" = 200; then
+          DOWNLOAD_URL="$(node -p "require('./amo-version.json').file.url")"
+          curl --fail --location --output "tabby-next-${VERSION}.firefox.xpi" "${DOWNLOAD_URL}"
+        elif test "${HTTP_STATUS}" = 404; then
+          npx --yes web-ext@10.6.0 sign \
+            --source-dir dist \
+            --artifacts-dir web-ext-artifacts \
+            --channel unlisted \
+            --upload-source-code "tabby-next-${VERSION}.source.zip"
+          signed_packages=(web-ext-artifacts/*.xpi)
+          test "${#signed_packages[@]}" -eq 1
+          mv "${signed_packages[0]}" "tabby-next-${VERSION}.firefox.xpi"
+        else
+          cat amo-version.json
+          exit 1
+        fi
     - name: Publish signed package
       env:
         GH_TOKEN: ${{ github.token }}
